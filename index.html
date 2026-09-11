@@ -4,40 +4,111 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Family Sportsbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, Helvetica, Arial, sans-serif; background: #f4f4f2; margin: 0; color: #1a1a1a; }
-  .card { background: #fff; border: 1px solid #e2e2df; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; animation: fadeIn 0.35s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-  button { padding: 8px 14px; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; transition: transform 0.1s ease, background 0.15s ease; }
-  button:hover { background: #f0f0ee; }
-  button:active { transform: scale(0.96); }
-  input { padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
-  h2, h3 { font-weight: 600; margin: 0 0 8px; }
-  .muted { color: #777; font-size: 13px; }
-  .win { color: #1a7f4e; }
-  .loss { color: #b23b3b; }
+  body {
+    font-family: 'DM Sans', -apple-system, Helvetica, Arial, sans-serif;
+    margin: 0;
+    color: #eef0f5;
+    background: radial-gradient(circle at 20% 0%, #1c2a24 0%, #0b0f0d 45%, #07090a 100%);
+    min-height: 100vh;
+  }
+  h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; margin: 0 0 10px; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 1rem; }
+  .card {
+    background: linear-gradient(155deg, #151f1a 0%, #101815 100%);
+    border: 1px solid rgba(72, 219, 141, 0.15);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+    animation: fadeIn 0.35s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  button {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    border-radius: 10px;
+    border: 1px solid rgba(72, 219, 141, 0.3);
+    background: rgba(72, 219, 141, 0.06);
+    color: #e8fff2;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  button:hover { background: rgba(72, 219, 141, 0.16); box-shadow: 0 0 14px rgba(72,219,141,0.25); }
+  button:active { transform: scale(0.95); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  input {
+    padding: 9px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+    font-size: 14px; background: rgba(255,255,255,0.05); color: #fff; outline: none;
+  }
+  input:focus { border-color: #48db8d; box-shadow: 0 0 0 3px rgba(72,219,141,0.15); }
+  .muted { color: #8b9a90; font-size: 13px; }
+  .win { color: #4ade80; }
+  .loss { color: #f87171; }
+  .gold { color: #f5c542; }
   .tab-panel { animation: fadeIn 0.3s ease; }
-  .balance { display: inline-block; }
-  .pulse-win { animation: pulseWin 0.6s ease; }
-  .pulse-loss { animation: pulseLoss 0.6s ease; }
-  @keyframes pulseWin { 0% { color: #1a7f4e; transform: scale(1.15); } 100% { color: inherit; transform: scale(1); } }
-  @keyframes pulseLoss { 0% { color: #b23b3b; transform: scale(1.1); } 100% { color: inherit; transform: scale(1); } }
-  .coin { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(#e8c14a, #c99a1e); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; margin: 12px auto; }
+  .balance { display: inline-block; font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.5px; }
+  .pulse-win { animation: pulseWin 0.7s ease; }
+  .pulse-loss { animation: pulseLoss 0.7s ease; }
+  @keyframes pulseWin { 0% { color: #4ade80; transform: scale(1.18); text-shadow: 0 0 24px rgba(74,222,128,0.8);} 100% { color: inherit; transform: scale(1); text-shadow: none; } }
+  @keyframes pulseLoss { 0% { color: #f87171; transform: scale(1.08); text-shadow: 0 0 18px rgba(248,113,113,0.7);} 100% { color: inherit; transform: scale(1); text-shadow: none; } }
+
+  .hero {
+    background: linear-gradient(135deg, #16261d 0%, #0c1712 100%);
+    border: 1px solid rgba(245, 197, 66, 0.2);
+    border-radius: 18px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -40%; right: -20%; width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(72,219,141,0.25) 0%, transparent 70%);
+  }
+
+  .coin { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe08a, #f5c542 60%, #c99a1e); display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: 'Space Grotesk'; color: #3a2b00; margin: 14px auto; box-shadow: 0 0 24px rgba(245,197,66,0.4); font-size: 22px; }
   .coin-flip { animation: flip 0.8s ease; }
-  @keyframes flip { 0% { transform: rotateY(0); } 50% { transform: rotateY(900deg) scale(1.1); } 100% { transform: rotateY(1800deg); } }
-  .reel { display: inline-block; width: 48px; height: 48px; line-height: 48px; text-align: center; font-size: 28px; border: 1px solid #ddd; border-radius: 8px; margin-right: 6px; background: #fafafa; }
+  @keyframes flip { 0% { transform: rotateY(0); } 50% { transform: rotateY(900deg) scale(1.15); } 100% { transform: rotateY(1800deg); } }
+
+  .reel { display: inline-block; width: 54px; height: 54px; line-height: 54px; text-align: center; font-size: 30px; border: 1px solid rgba(245,197,66,0.25); border-radius: 10px; margin-right: 8px; background: linear-gradient(180deg, #1a1a14, #0e0e0b); box-shadow: inset 0 0 12px rgba(0,0,0,0.6); }
   .reel-spin { animation: spin 0.5s ease; }
-  @keyframes spin { 0% { transform: translateY(-16px); opacity: 0.3; } 100% { transform: translateY(0); opacity: 1; } }
-  .wheel { width: 90px; height: 90px; border-radius: 50%; border: 4px solid #333; margin: 12px auto; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; background: conic-gradient(#b23b3b 0 25%, #1a1a1a 25% 50%, #1a7f4e 50% 55%, #b23b3b 55% 80%, #1a1a1a 80% 100%); color: #fff; }
+  @keyframes spin { 0% { transform: translateY(-20px) scale(0.8); opacity: 0.2; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+
+  .wheel { width: 100px; height: 100px; border-radius: 50%; border: 5px solid #f5c542; margin: 14px auto; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: 'Space Grotesk'; font-size: 20px; background: conic-gradient(#b23b3b 0 25%, #111 25% 50%, #1a7f4e 50% 55%, #b23b3b 55% 80%, #111 80% 100%); color: #fff; box-shadow: 0 0 26px rgba(245,197,66,0.35); }
   .wheel-spin { animation: wheelspin 1s cubic-bezier(.2,.7,.3,1); }
   @keyframes wheelspin { from { transform: rotate(0deg); } to { transform: rotate(1080deg); } }
-  .playing-card { display: inline-block; width: 34px; height: 48px; border: 1px solid #ccc; border-radius: 6px; text-align: center; line-height: 48px; font-weight: 600; margin-right: 4px; background: #fff; animation: deal 0.35s ease; }
-  @keyframes deal { from { opacity: 0; transform: translateY(-10px) rotate(-8deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
-  .tabbtn.active { border-color: #333; font-weight: 600; background: #eee; }
-  .leaderboard-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; animation: fadeIn 0.3s ease; }
-  .spinner { border: 3px solid #eee; border-top: 3px solid #999; border-radius: 50%; width: 18px; height: 18px; animation: rotate 0.8s linear infinite; display: inline-block; }
+
+  .playing-card { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 54px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 700; margin-right: 6px; background: linear-gradient(160deg, #1c1c1c, #0d0d0d); color: #f5c542; animation: deal 0.35s ease; }
+  @keyframes deal { from { opacity: 0; transform: translateY(-14px) rotate(-10deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
+
+  .tabbtn { flex: 1; text-align: center; }
+  .tabbtn.active { border-color: #48db8d; background: rgba(72,219,141,0.18); box-shadow: 0 0 16px rgba(72,219,141,0.25); }
+
+  .leaderboard-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); animation: fadeIn 0.3s ease; }
+  .rank { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.08); font-size: 12px; margin-right: 8px; font-weight: 700; }
+  .rank-1 { background: rgba(245,197,66,0.25); color: #f5c542; }
+  .rank-2 { background: rgba(200,200,200,0.2); color: #ddd; }
+  .rank-3 { background: rgba(205,127,50,0.25); color: #cd7f32; }
+
+  .spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #48db8d; border-radius: 50%; width: 18px; height: 18px; animation: rotate 0.8s linear infinite; display: inline-block; }
   @keyframes rotate { to { transform: rotate(360deg); } }
+
+  .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #f87171; margin-right: 5px; animation: livePulse 1.2s infinite; }
+  @keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .odds-btn { background: rgba(72,219,141,0.1); border: 1px solid rgba(72,219,141,0.35); color: #a7f3c5; font-family: 'Space Grotesk'; }
+  .odds-btn:hover { background: rgba(72,219,141,0.25); }
+
+  .confetti-piece { position: fixed; top: -10px; width: 8px; height: 14px; opacity: 0.9; z-index: 999; animation: confettiFall linear forwards; }
+  @keyframes confettiFall { to { transform: translateY(110vh) rotate(540deg); opacity: 0; } }
+
+  ::selection { background: rgba(72,219,141,0.3); }
 </style>
 </head>
 <body>
@@ -61,10 +132,24 @@
   };
   firebase.initializeApp(firebaseConfig);
   window.__db = firebase.firestore();
+
+  window.__confetti = function(count) {
+    const colors = ['#48db8d', '#f5c542', '#4ade80', '#ffffff'];
+    for (let i = 0; i < (count || 40); i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDuration = (1.6 + Math.random() * 1.2) + 's';
+      el.style.transform = `rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }
+  };
 </script>
 
 <script type="text/babel">
-const { useState, useEffect, useCallback, useRef } = React;
+const { useState, useEffect, useCallback } = React;
 const db = window.__db;
 
 const START_BALANCE = 1000;
@@ -83,7 +168,7 @@ function saveLocal(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
 }
 
-function Card({ children }) { return <div className="card">{children}</div>; }
+function Card({ children, className, style }) { return <div className={'card ' + (className||'')} style={style}>{children}</div>; }
 function Btn(props) { return <button {...props}>{props.children}</button>; }
 
 function App() {
@@ -106,30 +191,22 @@ function App() {
   const [wheelNum, setWheelNum] = useState(null);
   const [syncing, setSyncing] = useState(false);
 
-  // load player doc from Firestore, fall back to localStorage while offline
   useEffect(() => {
     if (!joined || !name) return;
     const ref = db.collection('players').doc(name);
     const unsub = ref.onSnapshot(snap => {
-      if (snap.exists) {
-        setPlayer(snap.data());
-      } else {
+      if (snap.exists) { setPlayer(snap.data()); }
+      else {
         const p = { balance: START_BALANCE, bets: [], history: [] };
-        ref.set(p);
-        setPlayer(p);
+        ref.set(p); setPlayer(p);
       }
-    }, err => {
-      setPlayer(loadLocal(`sb_player_${name}`, { balance: START_BALANCE, bets: [], history: [] }));
-    });
+    }, err => { setPlayer(loadLocal(`sb_player_${name}`, { balance: START_BALANCE, bets: [], history: [] })); });
     return () => unsub();
   }, [joined, name]);
 
-  // leaderboard listener
   useEffect(() => {
     const unsub = db.collection('players').onSnapshot(snap => {
-      const b = {};
-      snap.forEach(doc => { b[doc.id] = doc.data().balance; });
-      setBoard(b);
+      const b = {}; snap.forEach(doc => { b[doc.id] = doc.data().balance; }); setBoard(b);
     }, err => {});
     return () => unsub();
   }, []);
@@ -137,10 +214,7 @@ function App() {
   const savePlayer = useCallback((p) => {
     setPlayer(p);
     saveLocal(`sb_player_${name}`, p);
-    if (name) {
-      setSyncing(true);
-      db.collection('players').doc(name).set(p).finally(() => setSyncing(false));
-    }
+    if (name) { setSyncing(true); db.collection('players').doc(name).set(p).finally(() => setSyncing(false)); }
   }, [name]);
 
   const fetchGames = useCallback(async (sportKey) => {
@@ -163,9 +237,7 @@ function App() {
     if (tab === 'sports') {
       setGameError('');
       Promise.all(SPORTS.map(s => fetchGames(s.key))).then(results => {
-        const g = {};
-        SPORTS.forEach((s, i) => { g[s.key] = results[i]; });
-        setGames(g);
+        const g = {}; SPORTS.forEach((s, i) => { g[s.key] = results[i]; }); setGames(g);
       });
     }
   }, [tab]);
@@ -178,6 +250,7 @@ function App() {
     let newBalance = player.balance;
     const newHistory = [...player.history];
     const remaining = [];
+    let anyWin = false;
     for (const bet of player.bets) {
       const g = allGames.find(g => g.id === bet.gameId);
       if (g && g.completed) {
@@ -186,7 +259,7 @@ function App() {
         const won = winnerTeam && winnerTeam.name === bet.teamName;
         if (won) {
           const payout = Math.round(bet.amount * bet.odds);
-          newBalance += payout;
+          newBalance += payout; anyWin = true;
           newHistory.unshift({ text: `Won $${payout} on ${bet.teamName} (${g.name})`, win: true });
         } else {
           newHistory.unshift({ text: `Lost $${bet.amount} on ${bet.teamName} (${g.name})`, win: false });
@@ -195,14 +268,12 @@ function App() {
     }
     if (changed) {
       savePlayer({ ...player, balance: newBalance, bets: remaining, history: newHistory.slice(0, 30) });
-      triggerPulse(newBalance > player.balance);
+      triggerPulse(anyWin);
+      if (anyWin) window.__confetti(60);
     }
   }, [games]);
 
-  const triggerPulse = (isWin) => {
-    setPulse(isWin ? 'win' : 'loss');
-    setTimeout(() => setPulse(null), 650);
-  };
+  const triggerPulse = (isWin) => { setPulse(isWin ? 'win' : 'loss'); setTimeout(() => setPulse(null), 700); };
 
   const oddsFor = (team, opp) => {
     const parseRec = (r) => { const [w, l] = (r || '0-0').split('-').map(Number); return (w + 1) / (w + l + 2); };
@@ -223,6 +294,7 @@ function App() {
     const newBalance = Math.max(0, player.balance + delta);
     savePlayer({ ...player, balance: newBalance, history: [{ text: label, win: delta > 0 }, ...player.history].slice(0, 30) });
     triggerPulse(delta > 0);
+    if (delta >= betAmt * 3) window.__confetti(70);
   };
 
   const playCoinFlip = (choice) => {
@@ -230,8 +302,7 @@ function App() {
     setCoinAnim(true);
     setTimeout(() => {
       const result = Math.random() < 0.5 ? 'heads' : 'tails';
-      setCoinFace(result === 'heads' ? 'H' : 'T');
-      setCoinAnim(false);
+      setCoinFace(result === 'heads' ? 'H' : 'T'); setCoinAnim(false);
       const win = result === choice;
       applyResult(win ? betAmt : -betAmt, `Coin flip: called ${choice}, landed ${result} — ${win ? 'won' : 'lost'} $${betAmt}`);
       setMsg(`It's ${result}! You ${win ? 'won' : 'lost'} $${betAmt}.`);
@@ -244,8 +315,7 @@ function App() {
     setTimeout(() => {
       const symbols = ['🍒','🍋','🔔','⭐','7️⃣'];
       const newReels = [0,1,2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
-      setReels(newReels);
-      setReelAnim(false);
+      setReels(newReels); setReelAnim(false);
       let mult = 0;
       if (newReels[0] === newReels[1] && newReels[1] === newReels[2]) mult = newReels[0] === '7️⃣' ? 10 : 5;
       else if (newReels[0] === newReels[1] || newReels[1] === newReels[2] || newReels[0] === newReels[2]) mult = 1.5;
@@ -260,8 +330,7 @@ function App() {
     setWheelAnim(true);
     setTimeout(() => {
       const n = Math.floor(Math.random() * 37);
-      setWheelNum(n);
-      setWheelAnim(false);
+      setWheelNum(n); setWheelAnim(false);
       const isRed = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(n);
       const color = n === 0 ? 'green' : isRed ? 'red' : 'black';
       let win = false, mult = 0;
@@ -298,67 +367,65 @@ function App() {
   };
   useEffect(() => { if (bjHand && !bjHand.done && handVal(bjHand.player) > 21) bjStand(); }, [bjHand]);
 
-  const joinNow = () => {
-    if (!name.trim()) return;
-    saveLocal('sb_name', name);
-    setJoined(true);
-  };
+  const joinNow = () => { if (!name.trim()) return; saveLocal('sb_name', name); setJoined(true); };
 
   if (!joined) {
     return (
-      <div style={{ maxWidth: 420, margin: '40px auto', padding: '1rem' }}>
-        <h2>Family Sportsbook</h2>
-        <p className="muted">Enter your name to join with ${START_BALANCE} in play money.</p>
-        <input placeholder="Your name" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', marginBottom: 12 }} />
-        <Btn onClick={joinNow}>Join</Btn>
+      <div className="wrap" style={{ marginTop: 60 }}>
+        <div className="hero">
+          <h1 style={{ fontSize: 28 }}>🎰 Family <span className="gold">Sportsbook</span></h1>
+          <p className="muted">Enter your name to join with <span className="gold" style={{ fontWeight: 700 }}>${START_BALANCE}</span> in play money.</p>
+          <input placeholder="Your name" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', marginBottom: 12, marginTop: 10 }} onKeyDown={e => e.key === 'Enter' && joinNow()} />
+          <Btn onClick={joinNow} style={{ width: '100%' }}>Join the game</Btn>
+        </div>
       </div>
     );
   }
 
-  if (!player) return <div style={{ padding: '1rem' }}><span className="spinner"></span> Loading...</div>;
+  if (!player) return <div className="wrap" style={{ paddingTop: 40 }}><span className="spinner"></span> Loading...</div>;
 
   return (
-    <div style={{ maxWidth: 480, margin: '0 auto', padding: '1rem' }}>
-      <Card>
+    <div className="wrap">
+      <div className="hero">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div className="muted">{name} {syncing && <span className="spinner" style={{ marginLeft: 6 }}></span>}</div>
-            <div className={'balance' + (pulse === 'win' ? ' pulse-win' : pulse === 'loss' ? ' pulse-loss' : '')} style={{ fontSize: 24, fontWeight: 600 }}>${player.balance.toLocaleString()}</div>
+            <div className={'balance' + (pulse === 'win' ? ' pulse-win' : pulse === 'loss' ? ' pulse-loss' : '')} style={{ fontSize: 30, fontWeight: 700 }}>${player.balance.toLocaleString()}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div className="muted">Bet amount</div>
-            <input type="number" value={betAmt} min={1} onChange={e => setBetAmt(Math.max(1, +e.target.value))} style={{ width: 80 }} />
+            <input type="number" value={betAmt} min={1} onChange={e => setBetAmt(Math.max(1, +e.target.value))} style={{ width: 90 }} />
           </div>
         </div>
-      </Card>
+      </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
         {['sports','casino','board','history'].map(t => (
           <Btn key={t} className={'tabbtn' + (tab === t ? ' active' : '')} onClick={() => setTab(t)}>
-            {t === 'sports' ? 'Sports' : t === 'casino' ? 'Casino' : t === 'board' ? 'Leaderboard' : 'History'}
+            {t === 'sports' ? '🏈 Sports' : t === 'casino' ? '🎲 Casino' : t === 'board' ? '🏆 Board' : '📜 History'}
           </Btn>
         ))}
       </div>
 
-      {msg && <Card>{msg}</Card>}
+      {msg && <Card style={{ borderColor: 'rgba(245,197,66,0.3)' }}>{msg}</Card>}
 
       {tab === 'sports' && (
         <div className="tab-panel">
           {gameError && <Card>{gameError}</Card>}
           {SPORTS.map(s => (
-            <div key={s.key} style={{ marginBottom: 16 }}>
+            <div key={s.key} style={{ marginBottom: 18 }}>
               <h3>{s.label}</h3>
               {(games[s.key] || []).length === 0 && <p className="muted">No games right now.</p>}
               {(games[s.key] || []).filter(g => !g.completed).slice(0, 6).map(g => (
                 <Card key={g.id}>
-                  <div className="muted" style={{ marginBottom: 6 }}>{g.status === 'in' ? 'Live' : new Date(g.date).toLocaleString()}</div>
+                  <div className="muted" style={{ marginBottom: 8 }}>{g.status === 'in' ? <><span className="live-dot"></span>Live</> : new Date(g.date).toLocaleString()}</div>
                   {g.teams.map((t, i) => {
                     const opp = g.teams[1 - i];
                     const odds = oddsFor(t, opp);
                     return (
-                      <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
+                      <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
                         <span>{t.name} <span className="muted">({t.record})</span></span>
-                        <Btn onClick={() => placeBet(g, t.name, odds)}>Bet @ {odds}x</Btn>
+                        <Btn className="odds-btn" onClick={() => placeBet(g, t.name, odds)}>{odds}x</Btn>
                       </div>
                     );
                   })}
@@ -381,7 +448,7 @@ function App() {
           </Card>
           <Card>
             <h3>Slots</h3>
-            <div style={{ textAlign: 'center', marginBottom: 10 }}>
+            <div style={{ textAlign: 'center', marginBottom: 12 }}>
               {reels.map((r, i) => <span key={i} className={'reel' + (reelAnim ? ' reel-spin' : '')}>{r}</span>)}
             </div>
             <div style={{ textAlign: 'center' }}><Btn disabled={reelAnim} onClick={playSlots}>Spin</Btn></div>
@@ -401,7 +468,7 @@ function App() {
             {!bjHand && <Btn onClick={startBlackjack}>Deal</Btn>}
             {bjHand && (
               <div>
-                <p>You: {bjHand.player.map((c,i) => <span key={i} className="playing-card">{c}</span>)} ({handVal(bjHand.player)})</p>
+                <p>You: {bjHand.player.map((c,i) => <span key={i} className="playing-card">{c}</span>)} <span className="muted">({handVal(bjHand.player)})</span></p>
                 <p>Dealer: {bjHand.done ? bjHand.dealer.map((c,i) => <span key={i} className="playing-card">{c}</span>) : <><span className="playing-card">{bjHand.dealer[0]}</span><span className="playing-card">?</span></>}</p>
                 {!bjHand.done && (
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -411,7 +478,7 @@ function App() {
                 )}
                 {bjHand.done && (
                   <>
-                    <p style={{ fontWeight: 600 }}>{bjHand.outcome}</p>
+                    <p style={{ fontWeight: 700, fontFamily: 'Space Grotesk' }} className={bjHand.delta > 0 ? 'win' : bjHand.delta < 0 ? 'loss' : 'muted'}>{bjHand.outcome}</p>
                     <Btn onClick={() => setBjHand(null)}>New hand</Btn>
                   </>
                 )}
@@ -423,11 +490,11 @@ function App() {
 
       {tab === 'board' && (
         <Card className="tab-panel">
-          <h3>Leaderboard</h3>
-          {Object.entries(board).sort((a,b) => b[1]-a[1]).map(([n, bal]) => (
+          <h3>🏆 Leaderboard</h3>
+          {Object.entries(board).sort((a,b) => b[1]-a[1]).map(([n, bal], idx) => (
             <div key={n} className="leaderboard-row">
-              <span>{n}{n === name ? ' (you)' : ''}</span>
-              <span>${bal.toLocaleString()}</span>
+              <span><span className={'rank ' + (idx===0?'rank-1':idx===1?'rank-2':idx===2?'rank-3':'')}>{idx+1}</span>{n}{n === name ? ' (you)' : ''}</span>
+              <span style={{ fontFamily: 'Space Grotesk', fontWeight: 600 }}>${bal.toLocaleString()}</span>
             </div>
           ))}
           {Object.keys(board).length === 0 && <p className="muted">No one's joined yet.</p>}
@@ -439,11 +506,11 @@ function App() {
           <h3>History</h3>
           {player.history.length === 0 && <p className="muted">No activity yet.</p>}
           {player.history.map((h, i) => (
-            <div key={i} className={h.win ? 'win' : 'loss'} style={{ padding: '6px 0', borderBottom: '1px solid #eee' }}>{h.text}</div>
+            <div key={i} className={h.win ? 'win' : 'loss'} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: 14 }}>{h.text}</div>
           ))}
           {player.bets.length > 0 && (
             <>
-              <p style={{ marginTop: 12, fontWeight: 600 }}>Pending bets</p>
+              <p style={{ marginTop: 14, fontWeight: 600 }}>Pending bets</p>
               {player.bets.map((b, i) => <div key={i} className="muted">${b.amount} on {b.teamName} @ {b.odds}x</div>)}
             </>
           )}
