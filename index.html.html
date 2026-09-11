@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Family Sportsbook</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Helvetica, Arial, sans-serif; background: #f4f4f2; margin: 0; color: #1a1a1a; }
+  .card { background: #fff; border: 1px solid #e2e2df; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  button { padding: 8px 14px; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; transition: transform 0.1s ease, background 0.15s ease; }
+  button:hover { background: #f0f0ee; }
+  button:active { transform: scale(0.96); }
+  input { padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
+  h2, h3 { font-weight: 600; margin: 0 0 8px; }
+  .muted { color: #777; font-size: 13px; }
+  .win { color: #1a7f4e; }
+  .loss { color: #b23b3b; }
+  .tab-panel { animation: fadeIn 0.3s ease; }
+  .balance { display: inline-block; }
+  .pulse-win { animation: pulseWin 0.6s ease; }
+  .pulse-loss { animation: pulseLoss 0.6s ease; }
+  @keyframes pulseWin { 0% { color: #1a7f4e; transform: scale(1.15); } 100% { color: inherit; transform: scale(1); } }
+  @keyframes pulseLoss { 0% { color: #b23b3b; transform: scale(1.1); } 100% { color: inherit; transform: scale(1); } }
+  .coin { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(#e8c14a, #c99a1e); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; margin: 12px auto; }
+  .coin-flip { animation: flip 0.8s ease; }
+  @keyframes flip { 0% { transform: rotateY(0); } 50% { transform: rotateY(900deg) scale(1.1); } 100% { transform: rotateY(1800deg); } }
+  .reel { display: inline-block; width: 48px; height: 48px; line-height: 48px; text-align: center; font-size: 28px; border: 1px solid #ddd; border-radius: 8px; margin-right: 6px; background: #fafafa; }
+  .reel-spin { animation: spin 0.5s ease; }
+  @keyframes spin { 0% { transform: translateY(-16px); opacity: 0.3; } 100% { transform: translateY(0); opacity: 1; } }
+  .wheel { width: 90px; height: 90px; border-radius: 50%; border: 4px solid #333; margin: 12px auto; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; background: conic-gradient(#b23b3b 0 25%, #1a1a1a 25% 50%, #1a7f4e 50% 55%, #b23b3b 55% 80%, #1a1a1a 80% 100%); color: #fff; }
+  .wheel-spin { animation: wheelspin 1s cubic-bezier(.2,.7,.3,1); }
+  @keyframes wheelspin { from { transform: rotate(0deg); } to { transform: rotate(1080deg); } }
+  .playing-card { display: inline-block; width: 34px; height: 48px; border: 1px solid #ccc; border-radius: 6px; text-align: center; line-height: 48px; font-weight: 600; margin-right: 4px; background: #fff; animation: deal 0.35s ease; }
+  @keyframes deal { from { opacity: 0; transform: translateY(-10px) rotate(-8deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
+  .tabbtn.active { border-color: #333; font-weight: 600; background: #eee; }
+  .leaderboard-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; animation: fadeIn 0.3s ease; }
+  .spinner { border: 3px solid #eee; border-top: 3px solid #999; border-radius: 50%; width: 18px; height: 18px; animation: rotate 0.8s linear infinite; display: inline-block; }
+  @keyframes rotate { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCEE1JDDEMjaHAngIaL5HKkGYWKW9v33Qw",
+    authDomain: "family-gambling.firebaseapp.com",
+    projectId: "family-gambling",
+    storageBucket: "family-gambling.firebasestorage.app",
+    messagingSenderId: "128698094488",
+    appId: "1:128698094488:web:4054579ec11e0d962891ed"
+  };
+  firebase.initializeApp(firebaseConfig);
+  window.__db = firebase.firestore();
+</script>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+const db = window.__db;
+
+const START_BALANCE = 1000;
+const SPORTS = [
+  { key: 'nfl', label: 'NFL' }, { key: 'nba', label: 'NBA' },
+  { key: 'nhl', label: 'NHL' }, { key: 'mlb', label: 'MLB' },
+  { key: 'wnba', label: 'WNBA' }, { key: 'epl', label: 'Soccer (EPL)' },
+  { key: 'afl', label: 'AFL' }, { key: 'mma', label: 'MMA' },
+];
+const ESPN_MAP = { nfl: 'football/nfl', nba: 'basketball/nba', nhl: 'hockey/nhl', mlb: 'baseball/mlb', wnba: 'basketball/wnba', epl: 'soccer/eng.1', afl: 'australian-football/afl', mma: 'mma/ufc' };
+
+function loadLocal(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+}
+function saveLocal(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+}
+
+function Card({ children }) { return <div className="card">{children}</div>; }
+function Btn(props) { return <button {...props}>{props.children}</button>; }
+
+function App() {
+  const [name, setName] = useState(() => loadLocal('sb_name', ''));
+  const [joined, setJoined] = useState(() => !!loadLocal('sb_name', ''));
+  const [tab, setTab] = useState('sports');
+  const [player, setPlayer] = useState(null);
+  const [games, setGames] = useState({});
+  const [gameError, setGameError] = useState('');
+  const [betAmt, setBetAmt] = useState(50);
+  const [msg, setMsg] = useState('');
+  const [bjHand, setBjHand] = useState(null);
+  const [board, setBoard] = useState({});
+  const [pulse, setPulse] = useState(null);
+  const [coinAnim, setCoinAnim] = useState(false);
+  const [coinFace, setCoinFace] = useState('?');
+  const [reelAnim, setReelAnim] = useState(false);
+  const [reels, setReels] = useState(['🍒','🍋','🔔']);
+  const [wheelAnim, setWheelAnim] = useState(false);
+  const [wheelNum, setWheelNum] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+
+  // load player doc from Firestore, fall back to localStorage while offline
+  useEffect(() => {
+    if (!joined || !name) return;
+    const ref = db.collection('players').doc(name);
+    const unsub = ref.onSnapshot(snap => {
+      if (snap.exists) {
+        setPlayer(snap.data());
+      } else {
+        const p = { balance: START_BALANCE, bets: [], history: [] };
+        ref.set(p);
+        setPlayer(p);
+      }
+    }, err => {
+      setPlayer(loadLocal(`sb_player_${name}`, { balance: START_BALANCE, bets: [], history: [] }));
+    });
+    return () => unsub();
+  }, [joined, name]);
+
+  // leaderboard listener
+  useEffect(() => {
+    const unsub = db.collection('players').onSnapshot(snap => {
+      const b = {};
+      snap.forEach(doc => { b[doc.id] = doc.data().balance; });
+      setBoard(b);
+    }, err => {});
+    return () => unsub();
+  }, []);
+
+  const savePlayer = useCallback((p) => {
+    setPlayer(p);
+    saveLocal(`sb_player_${name}`, p);
+    if (name) {
+      setSyncing(true);
+      db.collection('players').doc(name).set(p).finally(() => setSyncing(false));
+    }
+  }, [name]);
+
+  const fetchGames = useCallback(async (sportKey) => {
+    try {
+      const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${ESPN_MAP[sportKey]}/scoreboard`);
+      const data = await res.json();
+      return (data.events || []).map(ev => {
+        const comp = ev.competitions[0];
+        const teams = comp.competitors.map(c => ({
+          name: c.team.shortDisplayName || c.team.displayName,
+          winner: c.winner, score: c.score, id: c.id,
+          record: (c.records && c.records[0] && c.records[0].summary) || '0-0'
+        }));
+        return { id: ev.id, name: ev.name, status: comp.status.type.state, completed: comp.status.type.completed, teams, date: ev.date };
+      });
+    } catch (e) { setGameError('Could not load live games right now.'); return []; }
+  }, []);
+
+  useEffect(() => {
+    if (tab === 'sports') {
+      setGameError('');
+      Promise.all(SPORTS.map(s => fetchGames(s.key))).then(results => {
+        const g = {};
+        SPORTS.forEach((s, i) => { g[s.key] = results[i]; });
+        setGames(g);
+      });
+    }
+  }, [tab]);
+
+  useEffect(() => {
+    if (!player || !player.bets || player.bets.length === 0) return;
+    const allGames = Object.values(games).flat();
+    if (allGames.length === 0) return;
+    let changed = false;
+    let newBalance = player.balance;
+    const newHistory = [...player.history];
+    const remaining = [];
+    for (const bet of player.bets) {
+      const g = allGames.find(g => g.id === bet.gameId);
+      if (g && g.completed) {
+        changed = true;
+        const winnerTeam = g.teams.find(t => t.winner);
+        const won = winnerTeam && winnerTeam.name === bet.teamName;
+        if (won) {
+          const payout = Math.round(bet.amount * bet.odds);
+          newBalance += payout;
+          newHistory.unshift({ text: `Won $${payout} on ${bet.teamName} (${g.name})`, win: true });
+        } else {
+          newHistory.unshift({ text: `Lost $${bet.amount} on ${bet.teamName} (${g.name})`, win: false });
+        }
+      } else { remaining.push(bet); }
+    }
+    if (changed) {
+      savePlayer({ ...player, balance: newBalance, bets: remaining, history: newHistory.slice(0, 30) });
+      triggerPulse(newBalance > player.balance);
+    }
+  }, [games]);
+
+  const triggerPulse = (isWin) => {
+    setPulse(isWin ? 'win' : 'loss');
+    setTimeout(() => setPulse(null), 650);
+  };
+
+  const oddsFor = (team, opp) => {
+    const parseRec = (r) => { const [w, l] = (r || '0-0').split('-').map(Number); return (w + 1) / (w + l + 2); };
+    const pTeam = parseRec(team.record), pOpp = parseRec(opp.record);
+    const winProb = Math.min(0.85, Math.max(0.15, pTeam / (pTeam + pOpp)));
+    return Math.max(1.1, +(1 / winProb * 0.95).toFixed(2));
+  };
+
+  const placeBet = (game, teamName, odds) => {
+    if (!player || betAmt <= 0 || betAmt > player.balance) { setMsg('Invalid bet amount.'); return; }
+    const bet = { gameId: game.id, teamName, amount: betAmt, odds, placedAt: Date.now() };
+    savePlayer({ ...player, balance: player.balance - betAmt, bets: [...player.bets, bet] });
+    setMsg(`Bet placed: $${betAmt} on ${teamName} @ ${odds}x`);
+  };
+
+  const applyResult = (delta, label) => {
+    if (!player) return;
+    const newBalance = Math.max(0, player.balance + delta);
+    savePlayer({ ...player, balance: newBalance, history: [{ text: label, win: delta > 0 }, ...player.history].slice(0, 30) });
+    triggerPulse(delta > 0);
+  };
+
+  const playCoinFlip = (choice) => {
+    if (!player || betAmt <= 0 || betAmt > player.balance) { setMsg('Invalid bet amount.'); return; }
+    setCoinAnim(true);
+    setTimeout(() => {
+      const result = Math.random() < 0.5 ? 'heads' : 'tails';
+      setCoinFace(result === 'heads' ? 'H' : 'T');
+      setCoinAnim(false);
+      const win = result === choice;
+      applyResult(win ? betAmt : -betAmt, `Coin flip: called ${choice}, landed ${result} — ${win ? 'won' : 'lost'} $${betAmt}`);
+      setMsg(`It's ${result}! You ${win ? 'won' : 'lost'} $${betAmt}.`);
+    }, 800);
+  };
+
+  const playSlots = () => {
+    if (!player || betAmt <= 0 || betAmt > player.balance) { setMsg('Invalid bet amount.'); return; }
+    setReelAnim(true);
+    setTimeout(() => {
+      const symbols = ['🍒','🍋','🔔','⭐','7️⃣'];
+      const newReels = [0,1,2].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+      setReels(newReels);
+      setReelAnim(false);
+      let mult = 0;
+      if (newReels[0] === newReels[1] && newReels[1] === newReels[2]) mult = newReels[0] === '7️⃣' ? 10 : 5;
+      else if (newReels[0] === newReels[1] || newReels[1] === newReels[2] || newReels[0] === newReels[2]) mult = 1.5;
+      const delta = mult > 0 ? Math.round(betAmt * mult) - betAmt : -betAmt;
+      applyResult(delta, `Slots: ${newReels.join(' ')} — ${delta >= 0 ? 'won' : 'lost'} $${Math.abs(delta)}`);
+      setMsg(`${newReels.join(' ')}  ${delta >= 0 ? `Won $${delta}!` : `Lost $${betAmt}.`}`);
+    }, 550);
+  };
+
+  const playRoulette = (pick) => {
+    if (!player || betAmt <= 0 || betAmt > player.balance) { setMsg('Invalid bet amount.'); return; }
+    setWheelAnim(true);
+    setTimeout(() => {
+      const n = Math.floor(Math.random() * 37);
+      setWheelNum(n);
+      setWheelAnim(false);
+      const isRed = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(n);
+      const color = n === 0 ? 'green' : isRed ? 'red' : 'black';
+      let win = false, mult = 0;
+      if (pick === 'red' || pick === 'black') { win = pick === color; mult = 2; }
+      else if (pick === 'even' || pick === 'odd') { win = n !== 0 && (n % 2 === 0) === (pick === 'even'); mult = 2; }
+      const delta = win ? betAmt * (mult - 1) : -betAmt;
+      applyResult(delta, `Roulette: landed ${n} (${color}), bet ${pick} — ${win ? 'won' : 'lost'} $${Math.abs(delta)}`);
+      setMsg(`Ball landed on ${n} (${color}). You ${win ? `won $${delta}` : `lost $${betAmt}`}.`);
+    }, 1000);
+  };
+
+  const draw = () => Math.min(10, Math.floor(Math.random() * 13) + 1);
+  const handVal = (cards) => cards.reduce((a,b)=>a+b, 0);
+  const startBlackjack = () => {
+    if (!player || betAmt <= 0 || betAmt > player.balance) { setMsg('Invalid bet amount.'); return; }
+    savePlayer({ ...player, balance: player.balance - betAmt });
+    setBjHand({ player: [draw(), draw()], dealer: [draw(), draw()], done: false });
+  };
+  const bjHit = () => setBjHand(h => ({ ...h, player: [...h.player, draw()] }));
+  const bjStand = () => {
+    setBjHand(h => {
+      if (!h) return h;
+      let dealer = [...h.dealer];
+      while (handVal(dealer) < 17) dealer.push(draw());
+      const pv = handVal(h.player), dv = handVal(dealer);
+      let outcome, delta;
+      if (pv > 21) { outcome = 'You bust'; delta = -betAmt; }
+      else if (dv > 21 || pv > dv) { outcome = 'You win'; delta = betAmt; }
+      else if (pv === dv) { outcome = 'Push'; delta = 0; }
+      else { outcome = 'Dealer wins'; delta = -betAmt; }
+      applyResult(delta + betAmt, `Blackjack: ${outcome} (you ${pv}, dealer ${dv}) — net $${delta}`);
+      return { ...h, dealer, done: true, outcome, delta };
+    });
+  };
+  useEffect(() => { if (bjHand && !bjHand.done && handVal(bjHand.player) > 21) bjStand(); }, [bjHand]);
+
+  const joinNow = () => {
+    if (!name.trim()) return;
+    saveLocal('sb_name', name);
+    setJoined(true);
+  };
+
+  if (!joined) {
+    return (
+      <div style={{ maxWidth: 420, margin: '40px auto', padding: '1rem' }}>
+        <h2>Family Sportsbook</h2>
+        <p className="muted">Enter your name to join with ${START_BALANCE} in play money.</p>
+        <input placeholder="Your name" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', marginBottom: 12 }} />
+        <Btn onClick={joinNow}>Join</Btn>
+      </div>
+    );
+  }
+
+  if (!player) return <div style={{ padding: '1rem' }}><span className="spinner"></span> Loading...</div>;
+
+  return (
+    <div style={{ maxWidth: 480, margin: '0 auto', padding: '1rem' }}>
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div className="muted">{name} {syncing && <span className="spinner" style={{ marginLeft: 6 }}></span>}</div>
+            <div className={'balance' + (pulse === 'win' ? ' pulse-win' : pulse === 'loss' ? ' pulse-loss' : '')} style={{ fontSize: 24, fontWeight: 600 }}>${player.balance.toLocaleString()}</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div className="muted">Bet amount</div>
+            <input type="number" value={betAmt} min={1} onChange={e => setBetAmt(Math.max(1, +e.target.value))} style={{ width: 80 }} />
+          </div>
+        </div>
+      </Card>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        {['sports','casino','board','history'].map(t => (
+          <Btn key={t} className={'tabbtn' + (tab === t ? ' active' : '')} onClick={() => setTab(t)}>
+            {t === 'sports' ? 'Sports' : t === 'casino' ? 'Casino' : t === 'board' ? 'Leaderboard' : 'History'}
+          </Btn>
+        ))}
+      </div>
+
+      {msg && <Card>{msg}</Card>}
+
+      {tab === 'sports' && (
+        <div className="tab-panel">
+          {gameError && <Card>{gameError}</Card>}
+          {SPORTS.map(s => (
+            <div key={s.key} style={{ marginBottom: 16 }}>
+              <h3>{s.label}</h3>
+              {(games[s.key] || []).length === 0 && <p className="muted">No games right now.</p>}
+              {(games[s.key] || []).filter(g => !g.completed).slice(0, 6).map(g => (
+                <Card key={g.id}>
+                  <div className="muted" style={{ marginBottom: 6 }}>{g.status === 'in' ? 'Live' : new Date(g.date).toLocaleString()}</div>
+                  {g.teams.map((t, i) => {
+                    const opp = g.teams[1 - i];
+                    const odds = oddsFor(t, opp);
+                    return (
+                      <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
+                        <span>{t.name} <span className="muted">({t.record})</span></span>
+                        <Btn onClick={() => placeBet(g, t.name, odds)}>Bet @ {odds}x</Btn>
+                      </div>
+                    );
+                  })}
+                </Card>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === 'casino' && (
+        <div className="tab-panel">
+          <Card>
+            <h3>Coin flip</h3>
+            <div className={'coin' + (coinAnim ? ' coin-flip' : '')}>{coinAnim ? '' : coinFace}</div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <Btn disabled={coinAnim} onClick={() => playCoinFlip('heads')}>Heads</Btn>
+              <Btn disabled={coinAnim} onClick={() => playCoinFlip('tails')}>Tails</Btn>
+            </div>
+          </Card>
+          <Card>
+            <h3>Slots</h3>
+            <div style={{ textAlign: 'center', marginBottom: 10 }}>
+              {reels.map((r, i) => <span key={i} className={'reel' + (reelAnim ? ' reel-spin' : '')}>{r}</span>)}
+            </div>
+            <div style={{ textAlign: 'center' }}><Btn disabled={reelAnim} onClick={playSlots}>Spin</Btn></div>
+          </Card>
+          <Card>
+            <h3>Roulette</h3>
+            <div className={'wheel' + (wheelAnim ? ' wheel-spin' : '')}>{wheelAnim ? '' : (wheelNum === null ? '?' : wheelNum)}</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <Btn disabled={wheelAnim} onClick={() => playRoulette('red')}>Red</Btn>
+              <Btn disabled={wheelAnim} onClick={() => playRoulette('black')}>Black</Btn>
+              <Btn disabled={wheelAnim} onClick={() => playRoulette('even')}>Even</Btn>
+              <Btn disabled={wheelAnim} onClick={() => playRoulette('odd')}>Odd</Btn>
+            </div>
+          </Card>
+          <Card>
+            <h3>Blackjack</h3>
+            {!bjHand && <Btn onClick={startBlackjack}>Deal</Btn>}
+            {bjHand && (
+              <div>
+                <p>You: {bjHand.player.map((c,i) => <span key={i} className="playing-card">{c}</span>)} ({handVal(bjHand.player)})</p>
+                <p>Dealer: {bjHand.done ? bjHand.dealer.map((c,i) => <span key={i} className="playing-card">{c}</span>) : <><span className="playing-card">{bjHand.dealer[0]}</span><span className="playing-card">?</span></>}</p>
+                {!bjHand.done && (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Btn onClick={bjHit}>Hit</Btn>
+                    <Btn onClick={bjStand}>Stand</Btn>
+                  </div>
+                )}
+                {bjHand.done && (
+                  <>
+                    <p style={{ fontWeight: 600 }}>{bjHand.outcome}</p>
+                    <Btn onClick={() => setBjHand(null)}>New hand</Btn>
+                  </>
+                )}
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {tab === 'board' && (
+        <Card className="tab-panel">
+          <h3>Leaderboard</h3>
+          {Object.entries(board).sort((a,b) => b[1]-a[1]).map(([n, bal]) => (
+            <div key={n} className="leaderboard-row">
+              <span>{n}{n === name ? ' (you)' : ''}</span>
+              <span>${bal.toLocaleString()}</span>
+            </div>
+          ))}
+          {Object.keys(board).length === 0 && <p className="muted">No one's joined yet.</p>}
+        </Card>
+      )}
+
+      {tab === 'history' && (
+        <Card className="tab-panel">
+          <h3>History</h3>
+          {player.history.length === 0 && <p className="muted">No activity yet.</p>}
+          {player.history.map((h, i) => (
+            <div key={i} className={h.win ? 'win' : 'loss'} style={{ padding: '6px 0', borderBottom: '1px solid #eee' }}>{h.text}</div>
+          ))}
+          {player.bets.length > 0 && (
+            <>
+              <p style={{ marginTop: 12, fontWeight: 600 }}>Pending bets</p>
+              {player.bets.map((b, i) => <div key={i} className="muted">${b.amount} on {b.teamName} @ {b.odds}x</div>)}
+            </>
+          )}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
