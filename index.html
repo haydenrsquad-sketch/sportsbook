@@ -12,7 +12,10 @@
     font-family: 'DM Sans', -apple-system, Helvetica, Arial, sans-serif;
     margin: 0;
     color: #eef0f5;
-    background: radial-gradient(circle at 20% 0%, #1c2a24 0%, #0b0f0d 45%, #07090a 100%);
+    background:
+      radial-gradient(circle at 15% -10%, rgba(139,92,246,0.12) 0%, transparent 40%),
+      radial-gradient(circle at 100% 10%, rgba(245,197,66,0.10) 0%, transparent 35%),
+      radial-gradient(circle at 20% 0%, #1c2a24 0%, #0b0f0d 45%, #07090a 100%);
     min-height: 100vh;
   }
   h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; margin: 0 0 10px; }
@@ -104,6 +107,29 @@
 
   .odds-btn { background: rgba(72,219,141,0.1); border: 1px solid rgba(72,219,141,0.35); color: #a7f3c5; font-family: 'Space Grotesk'; }
   .odds-btn:hover { background: rgba(72,219,141,0.25); }
+
+  .sport-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .sport-chip { font-size: 12px; font-weight: 700; font-family: 'Space Grotesk'; padding: 4px 10px; border-radius: 999px; letter-spacing: 0.4px; }
+  .sport-nfl { background: rgba(139,92,246,0.18); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.4); }
+  .sport-nba { background: rgba(249,115,22,0.18); color: #fdba74; border: 1px solid rgba(249,115,22,0.4); }
+  .sport-nhl { background: rgba(56,189,248,0.18); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.4); }
+  .sport-mlb { background: rgba(239,68,68,0.18); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+  .sport-wnba { background: rgba(236,72,153,0.18); color: #f9a8d4; border: 1px solid rgba(236,72,153,0.4); }
+  .sport-epl { background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.4); }
+  .sport-afl { background: rgba(250,204,21,0.18); color: #fde047; border: 1px solid rgba(250,204,21,0.4); }
+  .sport-mma { background: rgba(248,113,113,0.18); color: #fca5a5; border: 1px solid rgba(248,113,113,0.4); }
+
+  .game-card { position: relative; padding-left: 20px; overflow: hidden; }
+  .game-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .accent-nfl::before { background: #8b5cf6; } .accent-nba::before { background: #f97316; }
+  .accent-nhl::before { background: #38bdf8; } .accent-mlb::before { background: #ef4444; }
+  .accent-wnba::before { background: #ec4899; } .accent-epl::before { background: #22c55e; }
+  .accent-afl::before { background: #facc15; } .accent-mma::before { background: #f87171; }
+
+  .matchup-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+  .team-name { font-family: 'Space Grotesk'; font-weight: 600; font-size: 15px; }
+  .vs-divider { text-align: center; color: #556; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 2px 0; }
+  .odds-pill { min-width: 58px; text-align: center; font-weight: 700; border-radius: 999px; padding: 8px 14px; }
 
   .confetti-piece { position: fixed; top: -10px; width: 8px; height: 14px; opacity: 0.9; z-index: 999; animation: confettiFall linear forwards; }
   @keyframes confettiFall { to { transform: translateY(110vh) rotate(540deg); opacity: 0; } }
@@ -413,20 +439,28 @@ function App() {
         <div className="tab-panel">
           {gameError && <Card>{gameError}</Card>}
           {SPORTS.map(s => (
-            <div key={s.key} style={{ marginBottom: 18 }}>
-              <h3>{s.label}</h3>
+            <div key={s.key} style={{ marginBottom: 22 }}>
+              <div className="sport-header">
+                <span className={'sport-chip sport-' + s.key}>{s.label}</span>
+              </div>
               {(games[s.key] || []).length === 0 && <p className="muted">No games right now.</p>}
               {(games[s.key] || []).filter(g => !g.completed).slice(0, 6).map(g => (
-                <Card key={g.id}>
-                  <div className="muted" style={{ marginBottom: 8 }}>{g.status === 'in' ? <><span className="live-dot"></span>Live</> : new Date(g.date).toLocaleString()}</div>
+                <Card key={g.id} className={'game-card accent-' + s.key}>
+                  <div className="muted" style={{ marginBottom: 10, fontSize: 12 }}>{g.status === 'in' ? <><span className="live-dot"></span>LIVE</> : new Date(g.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</div>
                   {g.teams.map((t, i) => {
                     const opp = g.teams[1 - i];
                     const odds = oddsFor(t, opp);
                     return (
-                      <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
-                        <span>{t.name} <span className="muted">({t.record})</span></span>
-                        <Btn className="odds-btn" onClick={() => placeBet(g, t.name, odds)}>{odds}x</Btn>
-                      </div>
+                      <React.Fragment key={t.id}>
+                        <div className="matchup-row">
+                          <div>
+                            <div className="team-name">{t.name}</div>
+                            <div className="muted" style={{ fontSize: 12 }}>{t.record}</div>
+                          </div>
+                          <Btn className={'odds-btn odds-pill sport-' + s.key} onClick={() => placeBet(g, t.name, odds)}>{odds}x</Btn>
+                        </div>
+                        {i === 0 && <div className="vs-divider">VS</div>}
+                      </React.Fragment>
                     );
                   })}
                 </Card>
