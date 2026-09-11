@@ -66,13 +66,17 @@
     border: 1px solid rgba(245, 197, 66, 0.2);
     border-radius: 18px;
     padding: 16px 20px;
-    margin-bottom: 14px;
-    position: sticky;
+    position: fixed;
     top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    max-width: 480px;
     z-index: 50;
     backdrop-filter: blur(10px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.55);
   }
+  .hero-spacer { height: 92px; }
   .body-hero-fix { }
 
   .felt { background: radial-gradient(ellipse at 50% 0%, #1a3324 0%, #0e1f15 70%); border: 1px solid rgba(72,219,141,0.2); }
@@ -114,8 +118,12 @@
   .ball { position: absolute; top: 6px; left: 50%; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, #ccc); transform: translateX(-50%); box-shadow: 0 0 6px rgba(255,255,255,0.7); }
 
   .table-felt-card { background: radial-gradient(ellipse at 50% -10%, #1a3324 0%, #0d1b12 75%); border: 1px solid rgba(72,219,141,0.25); border-radius: 14px; padding: 16px; }
-  .playing-card { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 58px; border-radius: 8px; font-weight: 700; margin-right: 6px; background: linear-gradient(160deg, #fdfdfd, #e8e8e8); color: #222; animation: deal 0.35s ease; box-shadow: 0 3px 8px rgba(0,0,0,0.4); font-size: 15px; font-family: 'Space Grotesk'; }
+  .playing-card { position: relative; display: inline-block; width: 46px; height: 64px; border-radius: 8px; margin-right: 8px; background: linear-gradient(160deg, #fdfdfd, #e8e8e8); color: #222; animation: deal 0.35s ease; box-shadow: 0 3px 8px rgba(0,0,0,0.4); font-family: 'Space Grotesk'; vertical-align: top; }
   .playing-card.red { color: #c62828; }
+  .playing-card .corner { position: absolute; top: 4px; left: 5px; font-size: 12px; font-weight: 700; line-height: 1; }
+  .playing-card .corner-suit { font-size: 10px; }
+  .playing-card .center-suit { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 22px; }
+  .playing-card.facedown { background: repeating-linear-gradient(45deg, #1a3324, #1a3324 4px, #143c26 4px, #143c26 8px); border: 1px solid rgba(72,219,141,0.3); }
   @keyframes deal { from { opacity: 0; transform: translateY(-14px) rotate(-10deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
 
   .tabbtn { flex: 1; text-align: center; }
@@ -214,6 +222,9 @@ const SPORTS = [
   { key: 'afl', label: 'AFL' }, { key: 'mma', label: 'MMA' },
 ];
 const ESPN_MAP = { nfl: 'football/nfl', nba: 'basketball/nba', nhl: 'hockey/nhl', mlb: 'baseball/mlb', wnba: 'basketball/wnba', epl: 'soccer/eng.1', afl: 'australian-football/afl', mma: 'mma/ufc' };
+const ROULETTE_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const RED_NUMS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+const IDLE_RATE_PER_MIN = 25;
 
 function loadLocal(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
@@ -248,14 +259,45 @@ function App() {
   useEffect(() => {
     if (!joined || !name) return;
     const ref = db.collection('players').doc(name);
+    let caughtUp = false;
     const unsub = ref.onSnapshot(snap => {
-      if (snap.exists) { setPlayer(snap.data()); }
-      else {
-        const p = { balance: START_BALANCE, bets: [], history: [] };
+      if (snap.exists) {
+        const data = snap.data();
+        if (!caughtUp) {
+          caughtUp = true;
+          const now = Date.now();
+          const last = data.lastCollected || now;
+          const mins = Math.floor((now - last) / 60000);
+          if (mins > 0) {
+            const updated = { ...data, balance: data.balance + mins * IDLE_RATE_PER_MIN, lastCollected: last + mins * 60000 };
+            ref.set(updated);
+            setPlayer(updated);
+            return;
+          }
+        }
+        setPlayer(data);
+      } else {
+        const p = { balance: START_BALANCE, bets: [], history: [], lastCollected: Date.now() };
         ref.set(p); setPlayer(p);
       }
-    }, err => { setPlayer(loadLocal(`sb_player_${name}`, { balance: START_BALANCE, bets: [], history: [] })); });
+    }, err => { setPlayer(loadLocal(`sb_player_${name}`, { balance: START_BALANCE, bets: [], history: [], lastCollected: Date.now() })); });
     return () => unsub();
+  }, [joined, name]);
+
+  // passive income while the app is open
+  useEffect(() => {
+    if (!joined || !name) return;
+    const interval = setInterval(() => {
+      setPlayer(p => {
+        if (!p) return p;
+        const now = Date.now();
+        const updated = { ...p, balance: p.balance + IDLE_RATE_PER_MIN, lastCollected: now };
+        saveLocal(`sb_player_${name}`, updated);
+        db.collection('players').doc(name).set(updated).catch(()=>{});
+        return updated;
+      });
+    }, 60000);
+    return () => clearInterval(interval);
   }, [joined, name]);
 
   useEffect(() => {
@@ -461,6 +503,7 @@ function App() {
           </div>
         </div>
       </div>
+      <div className="hero-spacer"></div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
         {['sports','casino','board','history'].map(t => (
@@ -531,6 +574,16 @@ function App() {
             <h3>Roulette</h3>
             <div className="wheel-wrap">
               <div className={'wheel' + (wheelAnim ? ' wheel-spin' : '')}>
+                {ROULETTE_ORDER.map((num, i) => {
+                  const angle = (360 / ROULETTE_ORDER.length) * i;
+                  const isRed = RED_NUMS.includes(num);
+                  const color = num === 0 ? '#4ade80' : isRed ? '#f5b5b5' : '#ddd';
+                  return (
+                    <div key={num} style={{ position: 'absolute', top: '50%', left: '50%', width: 0, height: 0, transform: `rotate(${angle}deg) translate(0, -58px)` }}>
+                      <span style={{ display: 'inline-block', transform: `rotate(${-angle}deg) translate(-50%, -50%)`, fontSize: 9, fontWeight: 700, color, fontFamily: 'Space Grotesk' }}>{num}</span>
+                    </div>
+                  );
+                })}
                 <div className="wheel-hub">{wheelAnim ? '' : (wheelNum === null ? '?' : wheelNum)}</div>
               </div>
               {!wheelAnim && <div className="ball"></div>}
@@ -548,9 +601,27 @@ function App() {
             {bjHand && (
               <div>
                 <p className="muted" style={{ marginBottom: 4 }}>You ({handVal(bjHand.player)})</p>
-                <p>{bjHand.player.map((c,i) => <span key={i} className={'playing-card' + (c.red ? ' red' : '')}>{c.label}{c.suit}</span>)}</p>
-                <p className="muted" style={{ marginBottom: 4, marginTop: 10 }}>Dealer {bjHand.done ? `(${handVal(bjHand.dealer)})` : ''}</p>
-                <p>{bjHand.done ? bjHand.dealer.map((c,i) => <span key={i} className={'playing-card' + (c.red ? ' red' : '')}>{c.label}{c.suit}</span>) : <><span className={'playing-card' + (bjHand.dealer[0].red ? ' red' : '')}>{bjHand.dealer[0].label}{bjHand.dealer[0].suit}</span><span className="playing-card">?</span></>}</p>
+                <p>{bjHand.player.map((c,i) => (
+                  <span key={i} className={'playing-card' + (c.red ? ' red' : '')}>
+                    <span className="corner">{c.label}<br/><span className="corner-suit">{c.suit}</span></span>
+                    <span className="center-suit">{c.suit}</span>
+                  </span>
+                ))}</p>
+                <p className="muted" style={{ marginBottom: 4, marginTop: 12 }}>Dealer {bjHand.done ? `(${handVal(bjHand.dealer)})` : ''}</p>
+                <p>{bjHand.done ? bjHand.dealer.map((c,i) => (
+                  <span key={i} className={'playing-card' + (c.red ? ' red' : '')}>
+                    <span className="corner">{c.label}<br/><span className="corner-suit">{c.suit}</span></span>
+                    <span className="center-suit">{c.suit}</span>
+                  </span>
+                )) : (
+                  <>
+                    <span className={'playing-card' + (bjHand.dealer[0].red ? ' red' : '')}>
+                      <span className="corner">{bjHand.dealer[0].label}<br/><span className="corner-suit">{bjHand.dealer[0].suit}</span></span>
+                      <span className="center-suit">{bjHand.dealer[0].suit}</span>
+                    </span>
+                    <span className="playing-card facedown"></span>
+                  </>
+                )}</p>
                 {!bjHand.done && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                     <Btn onClick={bjHit}>Hit</Btn>
